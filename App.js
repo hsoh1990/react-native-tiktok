@@ -1,86 +1,34 @@
-import React from 'react';
-import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import * as ImagePicker from 'expo-image-picker';
+import React, { useCallback } from "react";
+import { Alert, Button, Linking, StyleSheet, View } from "react-native";
 
-export default function App() {
-  let [selectedImage, setSelectedImage] = React.useState(null);
+const supportedURL = "https://naver.com";
+const unsupportedURL = "slack://open?team=123456";
 
-  let openImagePickerAsync = async () => {
-    let permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+const OpenURLButton = ({ url, children }) => {
+  const handlePress = useCallback(async () => {
+    const supported = await Linking.canOpenURL(url);
 
-    if (permissionResult.granted === false) {
-      alert('Permission to access camera roll is required!');
-      return;
+    if (supported) {
+      await Linking.openURL(url);
+    } else {
+      Alert.alert(`Don't know how to open this URL: ${url}`);
     }
+  }, [url]);
 
-    let pickerResult = await ImagePicker.launchImageLibraryAsync();
-    if (pickerResult.cancelled === true) {
-      return;
-    }
+  return <Button title={children} onPress={handlePress} />;
+};
 
-    setSelectedImage({ localUri: pickerResult.uri });
-  };
-
-  let closeImage = () => {
-    setSelectedImage(null)
-  }
-
-  if (selectedImage !== null) {
-    return (
-      <View style={styles.container}>
-        <Image source={{ uri: selectedImage.localUri }} style={styles.thumbnail} />
-        <TouchableOpacity onPress={closeImage} style={styles.button}>
-          <Text style={styles.buttonText}>cancel</Text>
-        </TouchableOpacity>
-      </View>
-    );
-  }
-
+const App = () => {
   return (
     <View style={styles.container}>
-      <Text style={styles.instructions}>
-        v03.phone.api
-      </Text>
-
-      <TouchableOpacity onPress={openImagePickerAsync} style={styles.button}>
-        <Text style={styles.buttonText}>Pick a photo</Text>
-      </TouchableOpacity>
+      <OpenURLButton url={supportedURL}>Open Supported URL</OpenURLButton>
+      <OpenURLButton url={unsupportedURL}>Open Unsupported URL</OpenURLButton>
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  logo: {
-    width: 305,
-    height: 159,
-    marginBottom: 20,
-  },
-  instructions: {
-    color: '#888',
-    fontSize: 18,
-    marginHorizontal: 15,
-    marginBottom: 10,
-  },
-  button: {
-    backgroundColor: 'blue',
-    padding: 20,
-    borderRadius: 5,
-  },
-  buttonText: {
-    fontSize: 20,
-    color: '#fff',
-  },
-  thumbnail: {
-    width: 300,
-    height: 300,
-    resizeMode: 'contain',
-  },
+  container: { flex: 1, justifyContent: "center", alignItems: "center" },
 });
 
-
+export default App;
