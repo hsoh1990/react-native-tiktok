@@ -1,23 +1,49 @@
-import {Image, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
-
-const icon = require('./assets/adaptive-icon.png')
+import React from 'react';
+import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
 
 export default function App() {
+  let [selectedImage, setSelectedImage] = React.useState(null);
+
+  let openImagePickerAsync = async () => {
+    let permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (permissionResult.granted === false) {
+      alert('Permission to access camera roll is required!');
+      return;
+    }
+
+    let pickerResult = await ImagePicker.launchImageLibraryAsync();
+    if (pickerResult.cancelled === true) {
+      return;
+    }
+
+    setSelectedImage({ localUri: pickerResult.uri });
+  };
+
+  let closeImage = () => {
+    setSelectedImage(null)
+  }
+
+  if (selectedImage !== null) {
+    return (
+      <View style={styles.container}>
+        <Image source={{ uri: selectedImage.localUri }} style={styles.thumbnail} />
+        <TouchableOpacity onPress={closeImage} style={styles.button}>
+          <Text style={styles.buttonText}>cancel</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
-      <Text style={{color: '#888', fontSize: 18}}>
-        Open up App.js to start working on your app!
+      <Text style={styles.instructions}>
+        v03.phone.api
       </Text>
 
-      {/*<Image source={require('./assets/adaptive-icon.png')} style={{width: 200, height: 200}}/>*/}
-      {/*<Image source={icon} style={{width: 200, height: 200}}/>*/}
-      <Image source={icon} style={styles.icon}/>
-
-      <Image source={{uri: "https://pbs.twimg.com/profile_images/1148616067/phph86hLS_400x400"}}
-             style={{width: 200, height: 200}}/>
-
-      <TouchableOpacity onPress={() => alert('Hello, world!')} style={styles.button}>
-        <Text style={styles.buttonText}>button</Text>
+      <TouchableOpacity onPress={openImagePickerAsync} style={styles.button}>
+        <Text style={styles.buttonText}>Pick a photo</Text>
       </TouchableOpacity>
     </View>
   );
@@ -30,20 +56,30 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-
-  icon: {
-    width: 200,
-    height: 200
+  logo: {
+    width: 305,
+    height: 159,
+    marginBottom: 20,
   },
-
+  instructions: {
+    color: '#888',
+    fontSize: 18,
+    marginHorizontal: 15,
+    marginBottom: 10,
+  },
   button: {
-    backgroundColor: "blue",
+    backgroundColor: 'blue',
     padding: 20,
     borderRadius: 5,
   },
   buttonText: {
     fontSize: 20,
     color: '#fff',
+  },
+  thumbnail: {
+    width: 300,
+    height: 300,
+    resizeMode: 'contain',
   },
 });
 
