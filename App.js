@@ -1,34 +1,74 @@
-import React, { useCallback } from "react";
-import { Alert, Button, Linking, StyleSheet, View } from "react-native";
+import React, {useEffect, useState} from "react";
+import {StyleSheet, View, Image, Text, FlatList} from "react-native";
+import axios from "axios";
 
-const supportedURL = "https://naver.com";
-const unsupportedURL = "slack://open?team=123456";
-
-const OpenURLButton = ({ url, children }) => {
-  const handlePress = useCallback(async () => {
-    const supported = await Linking.canOpenURL(url);
-
-    if (supported) {
-      await Linking.openURL(url);
-    } else {
-      Alert.alert(`Don't know how to open this URL: ${url}`);
-    }
-  }, [url]);
-
-  return <Button title={children} onPress={handlePress} />;
-};
 
 const App = () => {
+  let [url] = useState('https://jsonplaceholder.typicode.com/photos?_limit=5&_page=')
+  let [page, setPage] = useState(0)
+  let [data, setData] = useState([])
+  let [refreshing, setRefreshing] = useState(false)
+
+  useEffect(async () => {
+    await initData()
+  }, [])
+
+  const initData = async () => {
+    try {
+      let axiosConfig = {
+        url: url+page,
+        method: 'get'
+      }
+      let res = await axios(axiosConfig)
+      setData(res.data)
+      setPage(page+1)
+    } catch (e) {
+      console.error(e)
+    }
+  }
+
+  const addData = async () => {
+    try {
+      let axiosConfig = {
+        url: url+page,
+        method: 'get'
+      }
+      let res = await axios(axiosConfig)
+      setData(data.concat(res.data))
+      setPage(page+1)
+    } catch (e) {
+      console.error(e)
+    }
+  }
+
+  const renderItem =  ({item, index}) => {
+    return <View style={{borderBottomWidth: 1, marginTop: index===0? 0: 20}}>
+      <Image source={{uri: item.url}} style={{height: 200}}/>
+      <Text>{item.title}</Text>
+    </View>
+  }
+
   return (
-    <View style={styles.container}>
-      <OpenURLButton url={supportedURL}>Open Supported URL</OpenURLButton>
-      <OpenURLButton url={unsupportedURL}>Open Unsupported URL</OpenURLButton>
+    <View>
+      <FlatList
+        data={data}
+        keyExtractor={(item, index) => 'key'+index}
+        renderItem={renderItem}
+        onEndReached={addData}
+        onEndReachedThreshold={0.8}
+        refreshing={refreshing}
+        onRefresh={initData}
+      />
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: "center", alignItems: "center" },
+  container: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center"
+  },
 });
 
 export default App;
