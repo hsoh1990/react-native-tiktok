@@ -1,67 +1,36 @@
-import React, {useEffect, useState} from "react";
-import {StyleSheet, View, Image, Text, FlatList} from "react-native";
-import axios from "axios";
-
+import React, {useState} from "react";
+import {StyleSheet, View, FlatList, Dimensions} from "react-native";
+import {posts} from "./fixture/posts";
+import Post from "./components/Post";
 
 const App = () => {
-  let [url] = useState('https://jsonplaceholder.typicode.com/photos?_limit=5&_page=')
+  let [data] = useState(posts)
   let [page, setPage] = useState(0)
-  let [data, setData] = useState([])
-  let [refreshing, setRefreshing] = useState(false)
 
-  useEffect(async () => {
-    await initData()
-  }, [])
 
-  const initData = async () => {
-    try {
-      let axiosConfig = {
-        url: url+page,
-        method: 'get'
-      }
-      let res = await axios(axiosConfig)
-      setData(res.data)
-      setPage(page+1)
-    } catch (e) {
-      console.error(e)
-    }
-  }
-
-  const addData = async () => {
-    try {
-      let axiosConfig = {
-        url: url+page,
-        method: 'get'
-      }
-      let res = await axios(axiosConfig)
-      setData(data.concat(res.data))
-      setPage(page+1)
-    } catch (e) {
-      console.error(e)
-    }
-  }
-
-  const renderItem =  ({item, index}) => {
-    return <View style={{borderBottomWidth: 1, marginTop: index===0? 0: 20}}>
-      <Image source={{uri: item.url}} style={{height: 200}}/>
-      <Text>{item.title}</Text>
-    </View>
+  let onScrollEnd = (e) => {
+    let contentOffset = e.nativeEvent.contentOffset;
+    let viewSize = e.nativeEvent.layoutMeasurement;
+    let pageNum = Math.floor(contentOffset.y / viewSize.height);
+    setPage(pageNum);
   }
 
   return (
     <View>
       <FlatList
         data={data}
-        keyExtractor={(item, index) => 'key'+index}
-        renderItem={renderItem}
-        onEndReached={addData}
-        onEndReachedThreshold={0.8}
-        refreshing={refreshing}
-        onRefresh={initData}
+        onMomentumScrollEnd={onScrollEnd}
+
+        keyExtractor={(item, index) => 'key' + index}
+        renderItem={({item, index}) => <Post item={item} play={page===index}/>}
+        showsVerticalScrollIndicator={false}
+        pagingEnabled
       />
     </View>
   );
 };
+
+export default App;
 
 const styles = StyleSheet.create({
   container: {
@@ -70,5 +39,3 @@ const styles = StyleSheet.create({
     alignItems: "center"
   },
 });
-
-export default App;
